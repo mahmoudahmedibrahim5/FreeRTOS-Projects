@@ -9,9 +9,9 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include ThirdParty/portable/MemMang/subdir.mk
--include ThirdParty/portable/GCC/ARM_CM4F/subdir.mk
--include ThirdParty/subdir.mk
+-include ThirdParty/FreeRTOS/portable/MemMang/subdir.mk
+-include ThirdParty/FreeRTOS/portable/GCC/ARM_CM4F/subdir.mk
+-include ThirdParty/FreeRTOS/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
@@ -55,6 +55,12 @@ default.size.stdout \
 OBJDUMP_LIST += \
 FreeRTOS_Projects.list \
 
+OBJCOPY_HEX += \
+FreeRTOS_Projects.hex \
+
+OBJCOPY_BIN += \
+FreeRTOS_Projects.bin \
+
 
 # All Target
 all: main-build
@@ -78,12 +84,22 @@ FreeRTOS_Projects.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEP
 	@echo 'Finished building: $@'
 	@echo ' '
 
+FreeRTOS_Projects.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "FreeRTOS_Projects.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
+FreeRTOS_Projects.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "FreeRTOS_Projects.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) FreeRTOS_Projects.elf FreeRTOS_Projects.list FreeRTOS_Projects.map default.size.stdout
+	-$(RM) FreeRTOS_Projects.bin FreeRTOS_Projects.elf FreeRTOS_Projects.hex FreeRTOS_Projects.list FreeRTOS_Projects.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'
